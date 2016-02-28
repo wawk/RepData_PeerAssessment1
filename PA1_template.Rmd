@@ -15,7 +15,7 @@ df <- read.table("./activity.csv",header=T,sep=",",numerals = "no.loss")
 df2 <- ddply(df,~date,summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
 ```
 ### **What is mean total number of steps taken per day?**
-```{r Echo = TRUE}
+```{r total_steps_historgram, Echo = TRUE}
 hist(df2$sum, main="Histogram of Total Steps Taken Each Day", xlab = "Steps")
 ```
 
@@ -27,7 +27,7 @@ tail(df2,10)
 ```
 
 ### **What is the average daily activity pattern?**
-```{r Echo = TRUE}
+```{r activity_pattern_line_graph, Echo = TRUE}
 stepinterval <- aggregate(steps ~ interval, data=df, FUN=mean)
 plot(stepinterval, type="l")
 ```
@@ -66,7 +66,7 @@ any(is.na(df$steps))
 
 #### **Answer:** There are slight changes to the data as can be evidenced by the comparitive histograms but sum doesnt seem to show the change in a dramatic fasion.
 
-```{r Echo = TRUE}
+```{r histogram_comparison_panel, Echo = TRUE}
 df4 <- ddply(df3,~date,summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
 par(mfrow = c(1, 2))
 hist(df4$sum, main = "Histogram (With NAs)" ,xlab="Total Steps taken each Day")
@@ -90,7 +90,7 @@ df3$dayofweek <- ifelse(weekdays(df3$date) %in% c("Saturday","Sunday"),"weekend"
 df3$dayofweek <- factor(df3$dayofweek)
 ```
 
-```{r Echo=TRUE}
+```{r weekend_vs_weekday_line_graph_panel, Echo=TRUE}
 par(mfrow = c(2, 1))
 for (dow in c("weekend", "weekday")) {
     dowsteps <- aggregate(steps ~ interval, data = df3, subset = df3$dayofweek == 
