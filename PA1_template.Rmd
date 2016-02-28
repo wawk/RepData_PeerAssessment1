@@ -1,25 +1,100 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research Assignment 1"
+author: "Steven Moody"
+date: "Saturday, February 27, 2016"
+output: html_document
 ---
 
+### Loading and Processing the Data
+```{r Echo = TRUE}
+library(plyr)
+library(stats)
+```
+```{r Echo = TRUE}
+df <- read.table("./activity.csv",header=T,sep=",",numerals = "no.loss")
+df2 <- ddply(df,~date,summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
+```
+### **What is mean total number of steps taken per day?**
+```{r Echo = TRUE}
+hist(df2$sum, main="Histogram of Total Steps Taken Each Day", xlab = "Steps")
+```
 
-## Loading and preprocessing the data
+#### Results showing the sum, mean and median for steps grouped by Date (using head and tail of data.frame)
 
+```{r results, echo = FALSE}
+head(df2,10)
+tail(df2,10)
+```
 
+### **What is the average daily activity pattern?**
+```{r Echo = TRUE}
+stepinterval <- aggregate(steps ~ interval, data=df, FUN=mean)
+plot(stepinterval, type="l")
+```
 
-## What is mean total number of steps taken per day?
+### **Which 5 minute interval, on average across all the days in the dataset, contains the maximum number of steps?**
+```{r Echo = TRUE}
+stepinterval[which.max(stepinterval$steps),]
+```
+Imputing missing values
+Calculate and report the total number of missing values in the dataset(i.e. the total number of rows with NAs)
+```{r Echo = TRUE}
+sum(is.na(df))
+```
 
+### **Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day or the mean for that 5 minut interval, etc.**
 
+#### **Answer:** I will use the rounded mean value for the appropriate interval corresponding to the one with the NA in steps.
 
-## What is the average daily activity pattern?
+### ** Create a new dataset that is equal to the original dataset but with the missing data filled in.**
+```{r Echo = TRUE}
+df3 <- df
+any(is.na(df))
+indexes = which(is.na(df3))
+for (indx in indexes) {
+        intrvl <- df3[indx,]$interval
+        stepVal <- stepinterval[stepinterval$interval == intrvl,]$steps
+        df3[indx,]$steps <- stepVal
+        
+}
+```
+#### Proof that there are no longer any NA's in the Steps column
+```{r Echo = TRUE}
+any(is.na(df$steps))
+```
+### **Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?**
 
+#### **Answer:** There are slight changes to the data as can be evidenced by the comparitive histograms but sum doesnt seem to show the change in a dramatic fasion.
 
+```{r Echo = TRUE}
+df4 <- ddply(df3,~date,summarize,sum=sum(steps),mean=mean(steps),median=median(steps))
+par(mfrow = c(1, 2))
+hist(df4$sum, main = "Histogram (With NAs)" ,xlab="Total Steps taken each Day")
+hist(df2$sum, main = "Histogram (NAs filled)",xlab="Total Steps taken each Day")
+```
 
-## Imputing missing values
+#### The dataset after NAs have been filled in for Steps
 
+```{r results_no_nas, echo = FALSE}
+head(df4,10)
+tail(df4,10)
+```
+### **Are there differences in activity patterns between weekdays and weekends?**
 
+#### **Answer:** Yes according to the graphs the most activity appears to occurr on the weekend, which makes
+#### sense since this is likely the time when most people will have the available time for activities.
 
-## Are there differences in activity patterns between weekdays and weekends?
+```{r Echo = FALSE}
+df3$date <- as.Date(as.character(df3$date))
+df3$dayofweek <- ifelse(weekdays(df3$date) %in% c("Saturday","Sunday"),"weekend","weekday")
+df3$dayofweek <- factor(df3$dayofweek)
+```
+
+```{r Echo=TRUE}
+par(mfrow = c(2, 1))
+for (dow in c("weekend", "weekday")) {
+    dowsteps <- aggregate(steps ~ interval, data = df3, subset = df3$dayofweek == 
+        dow, FUN = mean)
+    plot(dowsteps, type = "l", main = dow)
+}
+```
